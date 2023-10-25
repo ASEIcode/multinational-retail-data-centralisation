@@ -1,4 +1,5 @@
 from data_extraction import DataExtractor as de
+from tabula import read_pdf
 import pandas as pd
 
 class DataCleaning:
@@ -40,6 +41,37 @@ class DataCleaning:
 
         user_data['address'] = user_data['address'].apply(lambda x: x.replace("\n", ", "))
         user_data['address'] = user_data['address'].apply(lambda x: x.replace("/", ""))
-        user_data['address'] = user_data['address'].apply(lambda x: x.lower())  
+        user_data['address'] = user_data['address'].apply(lambda x: x.lower())
+        user_data.reset_index(inplace=True, drop=True)  
 
         return user_data
+    
+    def clean_card_data(self):
+        """Extracts card data from a PDF in Amazon S3 Bucket specified in the URL and cleans the following:
+                - drops rows with null values
+                - changes card_provider to category dtype
+                - removes '???' from card numbers
+                - drops leftover rows which are not numeric
+                - changes card_number to int64 dtype
+                - adds a day to the the expiry date and changes it to a datetime64[ns] dtype
+                - changes date_payment confirmed to a datetime64[ns] dtype
+                - resets the index dropping the original
+            returns -> card_data
+        """
+
+        data = read_pdf('https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf', pages='all', output_format='dataframe')
+        card_data = pd.DataFrame(data[0])
+        card_data.dropna(inplace=True)
+        card_data['card_provider'] = card_data['card_provider'].astype('category')
+
+        card_data['card_number'] = card_data['card_number'].apply(lambda x: x.replace('?', '')) #  1. removes ??? from card numbers  first
+        card_data = card_data[card_data['card_number'].str.isnumeric()] # 2. then drops non numeric - must be in this order
+        card_data['card_number'] = card_data['card_number'].astype('int64')
+
+        card_data['expiry_date'] = card_data['expiry_date'].apply(lambda x: '01/' + x)
+        card_data['expiry_date'] = pd.to_datetime(card_data['expiry_date'], dayfirst=True, format='mixed')
+        card_data['date_payment_confirmed'] = pd.to_datetime(card_data['date_payment_confirmed'], dayfirst=True, format='mixed')
+
+        card_data.reset_index(inplace=True, drop=True) # should go at the end of all cleaning
+
+        return card_data
