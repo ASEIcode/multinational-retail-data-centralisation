@@ -41,6 +41,25 @@ class DatabaseConnector:
         with self.engine.connect() as connection:
             data = connection.execute(text(query))
             return data
+    
+    def upload_to_db(self, dataframe, table_name):
+        with open("sales_data_db_creds.yaml", "r") as f:
+            creds = yaml.safe_load(f)
+        HOST = creds["HOST"]
+        PASSWORD = creds["PASSWORD"]
+        USER = creds["USER"]
+        DATABASE = creds["DATABASE"]
+        PORT = creds["PORT"]
+        URL = f"postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DATABASE}"
+        engine = create_engine(URL)
+        with engine.connect() as connection:
+            dataframe.to_sql(table_name, connection)
+        return f"Dataframe uploaded to sales_data database as {table_name}"
+
+        
+      
+
+
 
 
     

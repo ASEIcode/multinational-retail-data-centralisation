@@ -14,6 +14,7 @@ class DataCleaning:
                 - country_code error fixed GBB to GB
                 - country_code and country changed to category type
                 - Removes escape characters and slashes from address and replace with comma space
+                - Drops the extra index column and resets the index
             Returns -> user_data
         """
         extractor = de()
@@ -42,6 +43,7 @@ class DataCleaning:
         user_data['address'] = user_data['address'].apply(lambda x: x.replace("\n", ", "))
         user_data['address'] = user_data['address'].apply(lambda x: x.replace("/", ""))
         user_data['address'] = user_data['address'].apply(lambda x: x.lower())
+        user_data.drop("index", axis=1, inplace=True)
         user_data.reset_index(inplace=True, drop=True)  
 
         return user_data
