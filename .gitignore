@@ -4,3 +4,5 @@ test.py
 data_exploration_rds_user_data.ipynb
 exploration_card_dets.ipynb
 sales_data_db_creds.yaml
+store_data_exploration.ipynb
+api_test.ipynb

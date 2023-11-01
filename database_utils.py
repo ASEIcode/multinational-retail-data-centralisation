@@ -54,7 +54,7 @@ class DatabaseConnector:
         engine = create_engine(URL)
         with engine.connect() as connection:
             dataframe.to_sql(table_name, connection)
-        return f"Dataframe uploaded to sales_data database as {table_name}"
+        return f"Dataframe uploaded to sales_data database in PostgreSQL format as {table_name}"
 
         
       
