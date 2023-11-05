@@ -3,6 +3,7 @@ from tabula import read_pdf
 import pandas as pd
 import numpy as np
 import re
+import boto3
 
 class DataCleaning:
     def __init__(self) -> None:
@@ -127,6 +128,115 @@ class DataCleaning:
         df_store.drop('index', axis=1, inplace=True )
 
         return df_store
+    
+    def convert_product_weights(self, products_df):
+        """
+        Takes the products dataframe as an argument and uses regex conditional statements
+        to check the units and apply the correct conversion to kgs and remove unit name.
+        Returns corrected value to the dataframe and then returns the dataframe itself.
+        """
+
+        def convert_to_kg(inputstring):
+        
+            pattern1 = r"^[0-9]+kg$" # ?kgs
+            pattern2 = r"^[0-9]+ml$" # ?mls
+            pattern3 = r"^[0-9]+kg .$" # ?kg .
+            pattern4 = r"^[0-9]+oz$" # ?oz
+            pattern5 = r"^[0-9]+g$" # ?g
+            pattern6 = r"^[0-9]+ x [0-9]+kg$" # ? x ?kg
+            pattern7 = r"^[+-]?\d+(\.\d+)?g$" # grams float
+            pattern8 = r"^[+-]?\d+(\.\d+)?kg$"# kg as a float
+            pattern9 = r"^[0-9]+ x [0-9]+g$" # ? x ?g
+            pattern10 = r"^[0-9]+g .$" # ?g .
+
+            if re.match(pattern1, inputstring): # ?kgs
+                return inputstring.replace("kg", "")
+            elif re.match(pattern2, inputstring): # ?mls
+                inputstring.replace("ml", "")
+                ml_to_kilos = inputstring.replace("ml", "")
+                return float(ml_to_kilos) / 1000
+            elif re.match(pattern3, inputstring): # ?kg .
+                return inputstring.replace("kg .", "")
+            elif re.match(pattern4, inputstring): # ?oz
+                oz_to_kilos = inputstring.replace("oz", "")
+                return float(oz_to_kilos) / 35.274
+            elif re.match(pattern5, inputstring): # ?g
+                grams_to_kilos = inputstring.replace("g", "")
+                return float(grams_to_kilos) / 1000
+            elif re.match(pattern6, inputstring): # ? x ?kg
+                num_stripped = inputstring.replace("kg", "")
+                num_a = float(num_stripped.split(" x ")[0])
+                num_b = float(num_stripped.split(" x ")[1])
+                return num_a * num_b
+            elif re.match(pattern7, inputstring): # grams float
+                grams_to_kilos = inputstring.replace("g", "")
+                return float(grams_to_kilos) / 1000
+            elif re.match(pattern8, inputstring): # kg as a float
+                return inputstring.replace("kg", "")
+            elif re.match(pattern9, inputstring): # ? x ?g
+                num_stripped = inputstring.replace("g", "")
+                num_a = float(num_stripped.split(" x ")[0])
+                num_b = float(num_stripped.split(" x ")[1])
+                num_c = num_a * num_b
+                return num_c / 1000
+            elif re.match(pattern10, inputstring): # ?g .
+                grams_to_kilos = inputstring.replace("g .", "")
+                return float(grams_to_kilos) / 1000
+            else:
+                pass
+
+        products_df['weight'] = products_df['weight'].apply(lambda x: convert_to_kg(str(x)))
+
+        return products_df
+    
+    def clean_products_data(self):
+        """
+        Performs the following cleaning actions on the products data and returns the clean dataframe:
+            - Drop old index column
+            - Drop 3 erroneous rows with values like 123GSDFHH255
+            - Convert all weights to Kg and rename weights column to 'weight_in_kg'
+            - Change category and removed to category dtype
+            - Remove the £ sign from the price col and change to float dtype
+            - Change dtype of weight col to float
+            - Drop null rows
+            - Correct the format of dates not in standard format and change date_added to datetime dtype
+            - reset index
+        """
+        df = self.extractor.extract_from_s3()
+        products_df = self.convert_product_weights(df)
+
+        products_df.drop('Unnamed: 0', axis=1, inplace=True)
+        products_df.drop([751, 1400, 1133], inplace=True)
+
+        products_df['category'] = products_df['category'].astype('category')
+        products_df['removed'] = products_df['removed'].astype('category')
+
+        products_df['product_price'] = products_df['product_price'].apply(lambda x: str(x).replace("£", ""))
+        products_df['product_price'] = products_df['product_price'].astype('float64')
+
+        products_df['weight'] = products_df['weight'].astype('Float64')
+        products_df.rename(columns={'weight' : 'weight_in_kg'}, inplace=True)
+
+        products_df.dropna(inplace=True)
+
+        products_df.loc[307, 'date_added'] = '2018-10-22'
+        products_df.loc[1217, 'date_added'] = '2017-09-06'
+        products_df['date_added'] = pd.to_datetime(products_df['date_added'])
+
+        products_df.reset_index(inplace=True, drop=True)
+
+        return products_df
+
+
+
+
+
+
+
+
+    
+    
+    
 
 
 

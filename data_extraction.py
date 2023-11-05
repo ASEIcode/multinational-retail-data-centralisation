@@ -1,8 +1,10 @@
 from database_utils import DatabaseConnector as dc
+from botocore.exceptions import NoCredentialsError
 from sqlalchemy import text
 from tabula import read_pdf
 import pandas as pd
 import requests as rq
+import boto3
 
 class DataExtractor:
     def __init__(self) -> None:
@@ -40,6 +42,28 @@ class DataExtractor:
             stores_list.append(store_details)
         df = pd.DataFrame.from_dict(stores_list)
         return df
+    
+    def extract_from_s3(self, s3_address='s3://data-handling-public/products.csv'):
+        
+        bucket_name = s3_address.split('/')[2]
+        object_key = s3_address.split('/')[3]
+        # Initialize an S3 client
+        s3 = boto3.client('s3')
+
+        try:
+            # Download the file from S3
+            s3.download_file(bucket_name, object_key, 'products.csv')
+            print("File 'products.csv' downloaded successfully.")
+        except NoCredentialsError:
+            print("AWS credentials not found. Make sure your credentials are configured.")
+        except Exception as e:
+            print(f"An error occurred: {str(e)}")
+
+        products_df = pd.read_csv('products.csv')
+        return products_df
+
+
+        
     
         
         
