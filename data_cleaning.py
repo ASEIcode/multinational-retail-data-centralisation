@@ -226,6 +226,13 @@ class DataCleaning:
         products_df.reset_index(inplace=True, drop=True)
 
         return products_df
+    
+    def clean_orders_data(self):
+        orders_data = self.extractor.read_rds_table("legacy_users")
+        orders_data.drop(['first_name', 'last_name', '1', 'level_0', 'index'], axis=1, inplace=True)
+        return orders_data
+
+        
 
 
 
