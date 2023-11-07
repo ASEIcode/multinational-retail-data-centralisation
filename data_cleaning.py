@@ -1,13 +1,14 @@
 from data_extraction import DataExtractor as de
-from tabula import read_pdf
 import pandas as pd
 import numpy as np
 import re
-import boto3
 
 class DataCleaning:
+    """
+    Contains methods for cleaning pandas dataframes taken in from the DataExtractor class.
+    """
     def __init__(self) -> None:
-        self.extractor = de()
+        self.extractor = de() # create an instance of the DataExtractor class
     def clean_user_data(self):
         """ Extracts data using DataExtractor and cleans the following:
                 - String "Null" in place of null values (Rows Dropped).
@@ -20,7 +21,7 @@ class DataCleaning:
                 - Drops the extra index column and resets the index
             Returns -> user_data
         """
-        user_data = self.extractor.read_rds_table("legacy_users") # extract the user data to a data frame
+        user_data = self.extractor.read_rds_table("legacy_users")
 
         user_data = user_data[user_data['first_name'] != 'NULL'] 
 
@@ -95,7 +96,7 @@ class DataCleaning:
         Returns -> df_store
         """
         df_store = self.extractor.retrieve_stores_data()
-        df_store.drop('lat', axis=1, inplace=True) # drop lat column
+        df_store.drop('lat', axis=1, inplace=True)
         
         def has_numbers(input_string):
             "Looks for numbers in a string"
@@ -137,6 +138,11 @@ class DataCleaning:
         """
 
         def convert_to_kg(inputstring):
+            """"
+            Uses regex to search for various unit patterns and errors.
+            Converts each value to kilograms and removes the unit name.
+            Returns > products_df
+            """
         
             pattern1 = r"^[0-9]+kg$" # ?kgs
             pattern2 = r"^[0-9]+ml$" # ?mls
@@ -228,24 +234,35 @@ class DataCleaning:
         return products_df
     
     def clean_orders_data(self):
-        orders_data = self.extractor.read_rds_table("legacy_users")
+        """
+        Drops 'first_name', 'last_name', '1', 'level_0', 'index' columns from the dataframe.
+        Returns > orders_data
+        """
+        orders_data = self.extractor.read_rds_table("orders_table")
         orders_data.drop(['first_name', 'last_name', '1', 'level_0', 'index'], axis=1, inplace=True)
         return orders_data
-
-        
-
-
-
-
-
-
-
-
     
-    
-    
+    def clean_events_data(self):
+        """
+        Performs the following cleaning operations on the dataframe:
+            - Searches for letters in the timestamp column and removes the erroneous rows 
+            with values like FGG727HA
+            - changes the year, month and day columns to int dtypes
+            - changes the time period to category dtype
+            - resets the index
+        Returns > events_data
+        """
+        events_data = self.extractor.extract_json_from_link()
 
+        def has_alpha(input_string):
+            "Looks for letters in a string"
+            return any(char.isalpha() for char in input_string)
+        events_data = events_data[~events_data['timestamp'].apply(has_alpha)]
 
+        events_data['year'] = events_data['year'].astype('int64')
+        events_data['month'] = events_data['month'].astype('int64')
+        events_data['day'] = events_data['day'].astype('int64')
+        events_data['time_period'] = events_data['time_period'].astype('category')
+        events_data.reset_index(inplace=True, drop=True)
 
-
-    
+        return events_data
