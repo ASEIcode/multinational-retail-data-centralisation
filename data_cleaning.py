@@ -70,10 +70,8 @@ class DataCleaning:
 
         card_data['card_number'] = card_data['card_number'].apply(lambda x: x.replace('?', '')) #  1. removes ??? from card numbers  first
         card_data = card_data[card_data['card_number'].str.isnumeric()] # 2. then drops non numeric - must be in this order
+        
         card_data['card_number'] = card_data['card_number'].astype('int64')
-
-        card_data['expiry_date'] = card_data['expiry_date'].apply(lambda x: '01/' + x)
-        card_data['expiry_date'] = pd.to_datetime(card_data['expiry_date'], dayfirst=True, format='mixed')
         card_data['date_payment_confirmed'] = pd.to_datetime(card_data['date_payment_confirmed'], dayfirst=True, format='mixed')
 
         card_data.reset_index(inplace=True, drop=True) # should go at the end of all cleaning

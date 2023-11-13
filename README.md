@@ -8,6 +8,7 @@ An ETL pipeline designed to streamline and centralize data processing operations
 - [Installation](#installation)
 - [Usage](#usage)
 - [Configuration](#configuration)
+- [SQL Files](#sql-files)
 - [Known Issues and Future Improvements](#known-issues-and-future-improvements)
 - [License](#license)
 - [Contact](#contact)
@@ -53,7 +54,7 @@ pip install -r requirements.txt
 ```
 ## Usage
 
-main.ipynb is a notebook containing all of the commands to run the ETL pipeline. There are also markdown comments at each critical stage to help you keep track of what each script does.
+main.ipynb is a notebook containing all of the code blocks to run the ETL pipeline. There are also markdown comments at each critical stage to help you keep track of what each script does.
 
 ## Configuration
 
@@ -78,6 +79,24 @@ Before running the pipeline in main.ipynb Youll need two configuration yaml file
         RDS_USER: username
         RDS_DATABASE: database name
         RDS_PORT: port number
+
+## SQL Files
+
+The Folder SQL contains files for altering each table to have the correct dtypes, primary keys and foreign keys.
+
+All the files below starting with "alter" can be run in any order:
+- alter_dim_card_details.sql
+- alter_dim_date_time_table.sql
+- alter_dim_products_table.sql
+- alter_dim_store_details.sql
+- alter_dim_users.sql
+- alter_orders_table.sql
+
+**This must be run last** as the dtypes need to be correct before the primary and foreign keys can be added:
+- add_keys.sql
+
+There is also an ERD saved for your reference (sales_data_erd.pgerd)
+
 
 ## Known issues and Future improvements
 
