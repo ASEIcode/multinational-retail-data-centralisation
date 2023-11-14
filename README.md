@@ -10,9 +10,7 @@ An ETL pipeline designed to streamline and centralize data processing operations
 - [Configuration](#configuration)
 - [SQL Files](#sql-files)
 - [Known Issues and Future Improvements](#known-issues-and-future-improvements)
-- [License](#license)
 - [Contact](#contact)
-- [Note](#note)
 
 ## Skills and Technologies
 
@@ -82,21 +80,13 @@ Before running the pipeline in main.ipynb Youll need two configuration yaml file
 
 ## SQL Files
 
-The Folder SQL contains files for altering each table to have the correct dtypes, primary keys and foreign keys.
+The Folder SQL contains two files:
 
-All the files below starting with "alter" can be run in any order:
-- alter_dim_card_details.sql
-- alter_dim_date_time_table.sql
-- alter_dim_products_table.sql
-- alter_dim_store_details.sql
-- alter_dim_users.sql
-- alter_orders_table.sql
+- alter_tables_dtypes_add_keys.sql
+A file containing all the sql queries used to create the database schema (change the datatypes, make any changes needed before0 adding primary and foreign keys to the table) *Run First
 
-**This must be run last** as the dtypes need to be correct before the primary and foreign keys can be added:
-- add_keys.sql
-
-There is also an ERD saved for your reference (sales_data_erd.pgerd)
-
+- business_questions_queries.sql
+A collection of business insight queries that could be used to make better data driven decisions.
 
 ## Known issues and Future improvements
 
@@ -104,5 +94,10 @@ There is also an ERD saved for your reference (sales_data_erd.pgerd)
 - Try / Except blocks to catch errors more elegently in the extraction and upload classes
 - has_numbers and has_alpha are used more than once and could be written into the class as a method to avoid duplication
 - The retrieve_stores_data method in the DataExtractor class currently has to make many 451 consecutive requests and append them all to a list. This takes a long time. Parallel processing could be employed here to make this more efficient.
-- Currently each cleaning method has been written to fit specifically to the dummy data. If this were to be used to clean future data coming from similar sources in an automated way rather than being supervised manually by an engineer the cleaning would need to involve extra lines to cater to a larger variation of errors that could be present. Automatic duplicate and null checking for instance.
-- Create unit tests for each cleaning function to check for bugs as they are improved
+- Currently each cleaning method has been written to fit specifically to the dummy data. If this were to be used to clean future data coming from similar sources in an automated way rather than being supervised manually by an engineer the cleaning would need to involve extra lines to cater to a larger variation of errors that could be present.
+
+## Contact
+
+Adam Evans
+
+Email: adamevansjs@gmail.com
